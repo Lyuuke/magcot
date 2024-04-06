@@ -1,6 +1,6 @@
 '''Here defines the base classes for GUI element description
 # # #
-hierarchy: Coord -> Marker -> Element -> ElementMapping -> Layout
+hierarchy: Coord -> Marker -> Element
 '''
 
 from .contextmanager import *
@@ -80,7 +80,8 @@ class Marker:
 	# here defines all the data fields
 	# all fields (e.g. point x-y, size w-h, clip direction) are stored
 	# with `Coord` instances
-	HTML_provider: Optional[XmlProvider] = None
+	_HTML_provider: Optional[HtmlProvider] = None
+	# provides HTML elements
 
 	def __init__(self, **data: Union[Coord, iterable]) -> None:
 		if (missing := set(self.__slots__) - set(data)):
@@ -97,9 +98,19 @@ class Marker:
 				for fn in self.__slots__))
 		)
 
-	def get_clip_direction(self) -> Tuple[bool, bool]:
+	def get_clip_direction(self) -> NoReturn:
 		raise NotImplementedError("Only `ClippablePatchMarker` has this "
 			"method, this ({}) does not.".format(self.__class__))
+
+	def to_HTML(self, *args, **data) -> NoReturn:
+		'''Write lines of HTML elements. Note that this usually requires
+			external input data, such as colors, ordinals, etc.
+		These data can be passed down level-by-level.
+		Must be overridden by subclasses.
+		# # #
+		`return`: `str`
+		'''
+		raise NotImplementedError("This must be overridden.")
 
 
 class PointMarker(Marker):
@@ -110,6 +121,17 @@ class PointMarker(Marker):
 	'''
 
 	__slots__ = ("at",)
+	_HTML_provider = HtmlProvider("div", ["element", "point"],
+		"logPointInfo(self)")
+
+	def to_HTML(self, id_: str, color: str, symbol: str, z_index: Real,
+		additional_classes: List[str], suffix: str) -> str:
+		'''Needs external `id_`, `color`, and `symbol`.
+		'''
+		return self._HTML_provider(id_, symbol, additional_classes,
+			z_index=z_index, suffix=suffix,
+			color=color, x=self.at._0, y=self.at._1
+		)
 
 
 class OffsetMarker(Marker):
@@ -121,6 +143,19 @@ class OffsetMarker(Marker):
 	'''
 
 	__slots__ = ("at",)
+	_HTML_provider = HtmlProvider("div", ["element", "point"],
+		"logOffsetInfo(self)")
+
+	def to_HTML(self, id_: str, color: str, symbol: str, z_index: Real,
+		ref: PointMarker, additional_classes: List[str], suffix: str) -> str:
+		'''Needs external `id_`, `color`, and `symbol`, and an ADDITIONAL
+			`ref` (a `PointMarker` object) as the local origin point.
+		'''
+		ex, wye = self.at + ref.at
+		return self._HTML_provider(id_, symbol, additional_classes,
+			z_index=z_index, suffix=suffix,
+			color=color, x=ex, y=wye
+		)
 
 
 class GridMarker(Marker):
@@ -133,6 +168,19 @@ class GridMarker(Marker):
 	'''
 
 	__slots__ = ("ul", "grid", "clip")
+	_HTML_provider = HtmlProvider("div", ["element", "area grid"],
+		"logGridInfo(self)")
+
+	def to_HTML(self, id_: str, color: str, symbol: str, z_index: Real,
+		additional_classes: List[str], suffix: str) -> str:
+		'''Needs external `id_`, `color`, and `symbol`.
+		'''
+		return self._HTML_provider(id_, symbol, additional_classes,
+			z_index=z_index, suffix=suffix,
+			color=color, x=self.ul._0, y=self.ul._1,
+			clip_w=self.clip._0, clip_h=self.clip._1,
+			grid_x=self.grid._0, grid_y=self.grid._1,
+		)
 
 
 class PatchMarker(Marker):
@@ -144,6 +192,18 @@ class PatchMarker(Marker):
 	'''
 
 	__slots__ = ("ul", "size")
+	_HTML_provider = HtmlProvider("div", ["element", "area patch"],
+		"logPatchInfo(self)")
+
+	def to_HTML(self, id_: str, color: str, symbol: str, z_index: Real,
+		additional_classes: List[str], suffix: str) -> str:
+		'''Needs external `id_`, `color`, and `symbol`.
+		'''
+		return self._HTML_provider(id_, symbol, additional_classes,
+			z_index=z_index, suffix=suffix,
+			color=color, x=self.ul._0, y=self.ul._1,
+			w=self.size._0, h=self.size._1
+		)
 
 
 class ClippablePatchMarker(Marker):
@@ -157,6 +217,8 @@ class ClippablePatchMarker(Marker):
 		integers are considered. The first integer 
 	'''
 	__slots__ = ("ul", "size", "direction")
+	_HTML_provider = HtmlProvider("div", ["element", "area cpatch"],
+		"logClippablePatchInfo(self)")
 
 	def get_clip_direction(self) -> Optional[Tuple[str, bool]]:
 		'''Get the actual clip direction specified by `self.direction`.
@@ -174,6 +236,19 @@ class ClippablePatchMarker(Marker):
 		if y_dir is not None:
 			return ("y", y_dir)
 		return None
+
+	def to_HTML(self, id_: str, color: str, symbol: str, z_index: Real,
+		additional_classes: List[str], suffix: str) -> str:
+		'''Needs external `id_`, `color`, and `symbol`.
+		'''
+		DIRECTIONS = {"x": ("left", "right"), "y": ("bottom", "top")}
+		axis, sign = self.get_clip_direction()
+		return self._HTML_provider(id_, symbol, additional_classes,
+			z_index=z_index, suffix=suffix,
+			color=color, x=self.ul._0, y=self.ul._1,
+			w=self.size._0, h=self.size._1,
+			direction=DIRECTIONS[axis][sign]
+		)
 
 
 
@@ -239,6 +314,8 @@ class Element:
 	# provides JSON objects
 	_Java_like_provider: Optional[AssignmentStatementProvider] = None
 	# provides Java-like assignment statements
+	ΔZ: Real = 0.01
+	# the z-index increment between two juxtaposed HTML elements.]
 
 	def __init__(self, id_: str, context: Optional["GuiAnnotation"]=None,
 		**markers: Marker) -> None:
@@ -253,10 +330,10 @@ class Element:
 			self.context = CurrentContext().get()
 		else:
 			self.context = context
-		self.points: List[PointMarker] = []
-		self.patches: List[Union[PatchMarker, ClippablePatchMarker]] = []
-		self.grids: List[GridMarker] = []
-		self.offsets: List[OffsetMarker] = []
+		self.points: Dict[str, PointMarker] = {}
+		self.patches: Dict[str,
+			Union[PatchMarker, ClippablePatchMarker, GridMarker]] = {}
+		self.offsets: Dict[str, OffsetMarker] = {}
 		for fn, field_type in self._user_fields.items():
 			intended_field_data = markers[fn]
 			if not isinstance(intended_field_data, field_type):
@@ -288,32 +365,33 @@ class Element:
 
 	@add_data.register
 	def _(self, marker: PointMarker, field_name: str) -> None:
-		self.points.append(marker)
+		self.points[field_name] = marker
 		self.__dict__[field_name] = marker
 
 	@add_data.register
 	def _(self, marker: PatchMarker, field_name: str) -> None:
-		self.patches.append(marker)
+		self.patches[field_name] = marker
 		self.__dict__[field_name] = marker
 
 	@add_data.register
 	def _(self, marker: ClippablePatchMarker, field_name: str) -> None:
-		self.patches.append(marker)
+		self.patches[field_name] = marker
 		self.__dict__[field_name] = marker
 
 	@add_data.register
 	def _(self, marker: GridMarker, field_name: str) -> None:
-		self.grids.append(marker)
+		self.patches[field_name] = marker
 		self.__dict__[field_name] = marker
 
 	@add_data.register
 	def _(self, marker: OffsetMarker, field_name: str) -> None:
-		self.offsets.append(marker)
+		self.offsets[field_name] = marker
 		self.__dict__[field_name] = marker
 
 	def to_object(self) -> NoReturn:
 		'''Convert a instance to a JSON object (as Python dictionary) with
 			essential information. Must be overridden by subclasses.
+		`return`: `dict`
 		'''
 		raise NotImplementedError("This must be overridden.")
 
@@ -324,6 +402,37 @@ class Element:
 		`return`: (class_name, statement_line)
 		'''
 		raise NotImplementedError("This must be overridden.")
+
+	def to_HTML(self, color: str, symbol: str, additional_classes: List[str],
+		z_index: Real=10) -> Tuple[str, ...]:
+		'''Calls `Marker.to_HTML`.
+		On this level, parameter `id_` is resolved, but `color`, `symbol`,
+			and `z-index` still need to be provided externally.
+		'''
+		built: List[str] = []
+		built.append(f"<!-- {self.__class__.__name__} `{self.id}` -->")
+		# add a comment line
+		el_count = -1 # element counter
+		for pt_name, ptch in self.patches.items():
+			el_count += 1
+			built.append(ptch.to_HTML(f"{self.id}--{pt_name}", color, symbol,
+				self.context.z_index_start["patch"] + z_index
+				+ el_count * self.ΔZ, additional_classes, pt_name))
+		for pn_name, pn in self.points.items():
+			el_count += 1
+			built.append(pn.to_HTML(f"{self.id}--{pn_name}", color, symbol,
+				self.context.z_index_start["point"] + z_index
+				+ el_count * self.ΔZ, additional_classes, pn_name))
+		for ofs_name, ofs in self.offsets.items():
+			# `OffsetMarker` must provide a reference point (the local
+			# origin) to calculate the actual x-y coordinate
+			# they are still points
+			el_count += 1
+			built.append(ofs.to_HTML(f"{self.id}--{ofs_name}", color, symbol,
+				self.context.z_index_start["point"] + z_index
+				+ el_count * self.ΔZ, ref=self.points["ul"],
+				additional_classes=additional_classes, suffix=ofs_name))
+		return tuple(built)
 
 
 class Corner(Element):
@@ -350,7 +459,6 @@ class Corner(Element):
 		return "Point", self._Java_like_provider(
 			camel_case(self.id), *self.at.at
 		)
-
 
 
 class Rectangle(Element):
@@ -598,29 +706,39 @@ class Atlas(Element, Textured):
 
 
 
-class ElementMapping:
-	pass
-
-
-
-class Layout:
-	pass
-
-
-
 class GuiAnnotation:
-	'''WIP
+	'''The main class to operate GUI annotation workflows.
+	# # #
+	Must be instantialized with a mandatory texture path/object and optional
+		`ordinal_style` and `color_series` to annotate a GUI.
+	`color_series`: a list of color series names defined in
+		`providers.color_series`.
 	'''
 
-	def __init__(self, main_texture: Union[Texture, str]):
+	def __init__(self, main_texture: Union[Texture, str],
+		z_index_start: Optional[Dict[str, Real]]=None,
+		ordinal_style: str="qianziwen",
+		color_series: List[str]=["red", "green", "blue", "yellow",
+			"purple", "orange", "cyan", "crimson", "earthy",
+			"indigo", "dim"]
+	) -> None:
 		self.textures: Dict[str, Texture] = {}
 		self.groups: Dict[str, List[str]] = {}
 		self._current_group: Optional[str] = None
 		self.layouts: Dict[str, Layout] = {}
 		self.elements: Dict[str, Element] = {}
 		self.element_order: List[Tuple[Element, ...]] = []
+		self.ungrouped_elements: Dict[str, Element] = {}
 		self.add_texture(main_texture, "")
 		# the key of main texture is an empty string
+		self.z_index_start = {"point": 30, "patch": 10}
+		self.ΔZ: Real = 0.1
+		if isinstance(z_index_start, dict):
+			self.z_index_start.update(z_index_start)
+		# in this setting, when the number of patches is less than 200,
+		# all the patches will be displayed below the points
+		self.ordinals: Generator[str, None, None] = ordinals(ordinal_style)
+		self.color_series = [str(cs) for cs in color_series]
 		CurrentContext().focus_on(self)
 
 	def __getitem__(self, key: str) -> Union[Element, List[Element]]:
@@ -667,6 +785,8 @@ class GuiAnnotation:
 		self.element_order.append((el_id,))
 		if self._current_group is not None:
 			self.groups[self._current_group].append(el_id)
+		else:
+			self.ungrouped_elements[el_id] = element
 		return self
 
 	def switch_group(self, group_id: Optional[str]) -> Self:
@@ -699,7 +819,7 @@ class GuiAnnotation:
 
 	def serialize(self,
 		file_path: Optional[str]=None) -> Dict[str, Union[Dumpable, dict]]:
-		'''Convert GUI annotation to a JSON object (as Python dictionary)
+		'''Convert GUI annotations to a JSON object (as Python dictionary)
 			with essential information. This does not use `ObjectProvider`
 			as the homonymous method of `Element`.
 		'''
@@ -728,10 +848,12 @@ class GuiAnnotation:
 			"elementorder": by the order that elements are annotated.
 		'''
 		built: List[str] = []
-		built.append("// This is a fragment. Paste this to where it should be.")
+		built.append("// This is a fragment. "
+			"Paste this to where it should be.")
 		built.append("HashMap<String, String> textures = "
 			"new HashMap<String, String>();")
 		for tn, tins in self.textures.items():
+			# create texture mapping
 			built.append("textures.put(\"{}\", \"{}\");".format(
 				tn, tins.get_preferred_path()))
 		built.append("")
@@ -740,7 +862,7 @@ class GuiAnnotation:
 			statements_by_class: Dict[str, List[str]] = {
 				"Point": [], "Rect": [], "UV": [], "TexturedUV": [],
 				"AtlasUV": []
-			}
+			} # temporary storage
 			for el in self.elements.values():
 				cls_name, stat = el.to_Java_like()
 				if len(stat) > 79:
@@ -769,6 +891,111 @@ class GuiAnnotation:
 		if file_path:
 			with open(recognize_resource_location(file_path,
 				ext=".java"), "w") as file:
+				file.write(built_text)
+		# will return regardless of whether `file_path` is None
+		return built_text
+
+	def to_HTML_fragment(self, file_path: Optional[str]=None,
+		coloring: Literal["groupwise", "order"]="groupwise",
+		indent: int=0) -> str:
+		'''Convert GUI annotations to HTML elements.
+		The information is nearly all preserved, but not guaranteed.
+		# # #
+		`coloring`: how the elements are colored.
+			`groupwise`: elements within one group will be colored similarly.
+			`order`: elements will be colored according to their order,
+				regardless of groups.
+		`indent`: the number of tabs preceding each line.
+		# # #
+		If an element belongs to `group_name`, then it will have the class
+			"g--`group_name`".
+		Texture named `tex_name` will have the class "tex--`tex_name`".
+		'''
+		built: Dict[str, List[str]] = {tn: [] for tn in self.textures}
+		# every texture has a list
+		texture_el_counts: Dict[str, int] = {}
+		if coloring == "groupwise":
+			el_i = -1
+			csn = cycle(self.color_series)
+			for gn, gels in self.groups.items():
+				# grouped elements first
+				group_color_series = color_series(next(csn))
+				for el_name in gels:
+					el = self.elements[el_name]
+					if isinstance(el, Textured):
+						etx = el.texture.bound_shortcut
+					else:
+						etx = ""
+					if etx not in self.textures:
+						# only consider elements with textures
+						continue
+					texture_el_counts[etx] = el_i = \
+						texture_el_counts.get(etx, 0) + 1
+					built[etx].append(("\n" + "\t" * indent).join(el.to_HTML(
+						color=next(group_color_series),
+						symbol=next(self.ordinals),
+						z_index=self.ΔZ * el_i,
+						additional_classes=["g--" + gn]
+					)))
+			group_color_series = color_series("dim")
+			for el in self.ungrouped_elements.values():
+				# then ungrouped ones
+				if isinstance(el, Textured):
+					etx = el.texture.bound_shortcut
+				else:
+					etx = ""
+				if etx not in self.textures:
+					# only consider elements with textures
+					continue
+				texture_el_counts[etx] = el_i = \
+					texture_el_counts.get(etx, 0) + 1
+				built[etx].append(("\n" + "\t" * indent).join(el.to_HTML(
+					color=next(group_color_series),
+					symbol=next(self.ordinals),
+					z_index=self.ΔZ * el_i,
+					additional_classes=[]
+				)))
+		elif coloring == "order":
+			group_color_series = color_series("any")
+			for eln, el in self.elements.items():
+				groups_containing: List[str] = []
+				for gn, gels in self.groups:
+					# find all groups that contain this element
+					if eln in gels:
+						groups_containing.append("g--" + eln)
+				if isinstance(el, Textured):
+					etx = el.texture.bound_shortcut
+				else:
+					etx = ""
+				if etx not in self.textures:
+					# only consider elements with textures
+					continue
+				texture_el_counts[etx] = el_i = \
+					texture_el_counts.get(etx, 0) + 1
+				built[etx].append(("\n" + "\t" * indent).join(el.to_HTML(
+					color=next(group_color_series),
+					symbol=next(self.ordinals),
+					z_index=self.ΔZ * el_i,
+					additional_classes=groups_containing
+				)))
+		else:
+			raise ValueError("Unsupported value for `coloring`.")
+		# # #
+		all_built_texts: List[str] = []
+		for tn, segs in built.items():
+			texture_built_text = "<div class=\"tex--{} texwrap\">\n".format(
+				tn)
+			texture_built_text += "<img src=\"{}\"/>".format(
+				to_data_URL(self.textures[tn].texture_path)
+			)
+			texture_built_text += "\n\n"
+			texture_built_text += "\n\n".join(segs)
+			texture_built_text += "\n</div>"
+			all_built_texts.append(texture_built_text)
+		built_text = "\n\n".join(all_built_texts)
+		if file_path:
+			with open(recognize_resource_location(file_path,
+				ext=".html"), "w") as file:
 				file.write(built_text)
 		# will return regardless of whether `file_path` is None
 		return built_text

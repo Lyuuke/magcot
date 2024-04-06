@@ -3,13 +3,17 @@
 '''
 
 import base64
+from collections import deque
 from collections.abc import Iterable as iterable
 # collections.abc.Iterable can be used in type check, unlike typing.Iterable
-# they are both used_
+# they are both used
+from colorsys import hsv_to_rgb
 from functools import cached_property, singledispatchmethod
 from itertools import cycle
+from math import hypot
 from numbers import Real
 import os
+from random import choice, uniform
 import struct
 from typing import *
 
@@ -201,11 +205,69 @@ def ordinals(ord_name: str) -> Generator[str, None, None]:
 	The series are specified in the path "./ordinaldata/*.txt".
 	'''
 	def _() -> Generator[str, None, None]:
-		with open(f"./ordinaldata/{ord_name}.txt", "r",
+		with open(os.path.dirname(__file__)
+			+ f"/ordinaldata/{ord_name}.txt", "r",
 			encoding="utf-8") as dfile:
 			ord_nums = dfile.read().strip()
 		yield from ord_nums
 	return cycle(_())
+
+
+def color_series(series_name: str) -> Generator[str, None, None]:
+	'''Get random series of colors in the HSV subspace specified by
+		`series_name`.
+	'''
+	def _(H_lim: Tuple[Real, Real], S_lim: Tuple[Real, Real],
+		V_lim: Tuple[Real, Real], close_threshold: Real=1/40):
+		HSV_previous: Deque[Tuple[Real, Real, Real]] = deque()
+		fatigue_count = 0
+		# count the times of failure to generate a color
+		while True:
+			rand_H = uniform(*H_lim) % 1.
+			rand_S = uniform(*S_lim)
+			rand_V = uniform(*V_lim)
+			for pre_H, pre_S, pre_V in HSV_previous:
+				# randomly choose a HSV inside the subspace
+				H_diff = abs(rand_H - pre_H)
+				dist = hypot(
+					min(H_diff, 1 - H_diff), # hue is a cyclic value
+					rand_S - pre_S,
+					rand_V - pre_V)
+				if dist < close_threshold and fatigue_count < 30:
+					# check whether this color is close enough to any of
+					# the five previously generated colors
+					# if yes, discard this color
+					# the exception is the condition that `fatigue_count`
+					# is too large
+					fatigue_count += 1
+					break
+			else:
+				# this color is not discarded
+				HSV_previous.append((rand_H, rand_S, rand_V))
+				fatigue_count = 0
+				if len(HSV_previous) > 5:
+					# ensure the length is no more than 5
+					HSV_previous.pop_left()
+				hold = map(lambda x: round(x * 255),
+					hsv_to_rgb(rand_H, rand_S, rand_V))
+				yield "rgb({},{},{})".format(*hold)
+
+	_series_data = {
+		"crimson": [(5/6, 1), (0.6, 1), (0.5, 1), 1/40],
+		"red": [(-1/12, 1/12), (0.6, 0.95), (0.3, 0.95), 1/25],
+		"orange": [(1/20, 1/9), (0.4, 0.95), (0.7, 1), 1/30],
+		"earthy": [(1/20, 1/9), (0.3, 0.65), (0.2, 0.65), 1/25],
+		"yellow": [(1/9, 1/6), (0.4, 0.95), (0.7, 0.975), 1/25],
+		"green": [(1/6, 5/12), (0.4, 0.95), (0.3, 0.95), 1/20],
+		"cyan": [(5/12, 13/24), (0.4, 0.95), (0.3, 1), 1/30],
+		"blue": [(13/24, 2/3), (0.4, 0.95), (0.3, 0.95), 1/25],
+		"indigo": [(2/3, 17/24), (0.3, 0.8), (0.2, 0.65), 1/30],
+		"purple": [(3/4, 5/6), (0.4, 0.95), (0.3, 0.95), 1/25],
+		"dim": [(0, 1), (0, 0.25), (0.1, 0.9), 1/20],
+		"any": [(-1/3, 3/12), (0.25, 0.95), (0.3, 0.95)]
+	}
+
+	return _(*_series_data[series_name])
 
 
 
@@ -304,8 +366,9 @@ class AssignmentStatementProvider:
 		semicolon: bool=True,
 		type_literal_map: Mapping[type, Tuple[str,
 			Optional[Callable[[str], str]]]]={
-				str: ('"{}"', None), bool: ("{}", str.lower),
-				type(None): ("null", None)
+				str:		('"{}"', None),
+				bool:		("{}", str.lower),
+				type(None):	("null", None)
 			}
 	) -> None:
 		if type_signature == "before":
@@ -342,6 +405,66 @@ class AssignmentStatementProvider:
 
 
 
-class XmlProvider:
+class HtmlProvider:
+	'''A class used to provide HTML elements.
+	# # #
+	Structure of an element:
+		<`tag` id="..." class="`classes`..." onclick="`onclick`"
+		data="`data`...">
+			`content`
+		</`tag`>
+	where `data` can be parsed as a JSON object.
+	'''
 
-	pass
+	def __init__(self, tag: str,
+		classes: Optional[List[str]]=None,
+		onclick: Optional[str]=None
+	) -> None:
+		stream: List[str] = [str(tag)]
+		stream.append("id=\"{}\"") # slot 1
+		if classes is not None:
+			stream.append("class=\"{}$ac$\"".format(" ".join(classes)))
+			# $ac$ is a placeholder for additional classes
+			# a slot is not used here for convenience
+		else:
+			steam.append("class=\"$ac$\"")
+		if onclick is not None:
+			stream.append(f"onclick=\"{onclick}\"")
+		self.template = ("<{}".format(" ".join(stream))
+			+ "{}>" + "{}" + f"</{tag}>"
+			#  ^2      ^3
+			# 2: this slot is reserved for potential `data` field, and
+			# should be preceded by a space
+			# 3: this slot is reserved for `content` field
+		)
+
+	def __call__(self, id_: Optional[str]=None, content: Optional[str]=None,
+		additional_classes: List[str]=[],
+		**data: str) -> str:
+		def to_JSON_lit(obj: Any) -> str:
+			'''A simple converter to turn objects into legal JSON literals.
+			'''
+			if isinstance(obj, bool):
+				return str(obj).lower()
+			elif isinstance(obj, str):
+				return '"' + obj + '"'
+			elif obj is None:
+				return "null"
+			elif isinstance(obj, float):
+				return str(round(obj, 5))
+			else:
+				return str(obj)
+				# this is not accurate, but enough for most usages here
+		# # #
+		if not data:
+			return self.template.format(id_, "", content)
+		data_string = (" data='{"
+			+ ",".join("\"{}\":{}".format(k, to_JSON_lit(v))
+				for k, v in data.items())
+			+ "}'"
+		)
+		# there are, of cource, some better ways to do this
+		built = self.template.format(id_, data_string, content)
+		built = built.replace("$ac$",
+			" " + " ".join(additional_classes) if additional_classes else "")
+		return built
