@@ -1048,5 +1048,34 @@ class GuiAnnotation:
 				file.write(frame)
 		else:
 			# embed all the files
-			# kāryakāryatstsaññe
-			...
+			SOURCE_BASE = HERE + "/blocks/sources/"
+			with open(SOURCE_BASE + "magcotstyle.css", "r",
+				encoding="utf-8") as file:
+				read_text = file.read()
+			frame = frame.replace("$stylesheet$",
+				'<style type="text/css">\n'
+				+ "\n".join(
+					"\t\t" + ln for ln in read_text.splitlines()
+				)
+				+ '\n\t</style>'
+			)
+			JSs = ["arrangement", "interaction"]
+			# JavaScript file names used
+			JS_texts: List[str] = []
+			for js in JSs:
+				with open(SOURCE_BASE + js + ".js", "r",
+				encoding="utf-8") as file:
+					read_text = file.read()
+					JS_texts.append('<script type="text/javascript">\n'
+						+ "\n".join(
+						"\t\t" + ln for ln in read_text.splitlines())
+						+ '\n\t</script>'
+					)
+			frame = frame.replace("$scripts$", "\n\t".join(JS_texts))
+			frame = frame.replace("$iconsrc$",
+				to_data_URL(SOURCE_BASE + "icon.png"))
+			frame = frame.replace("$elements$",
+				self.to_HTML_fragment(indent = 4))
+			with open(recognize_resource_location(file_path,
+				ext=".html"), "w", encoding="utf-8") as file:
+				file.write(frame)
