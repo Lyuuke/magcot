@@ -7,6 +7,7 @@ from .contextmanager import *
 from .providers import *
 # # #
 import json
+from shutil import copytree
 
 
 
@@ -122,7 +123,7 @@ class PointMarker(Marker):
 
 	__slots__ = ("at",)
 	_HTML_provider = HtmlProvider("div", ["element", "point"],
-		"logPointInfo(self)")
+		"logPointInfo(this)")
 
 	def to_HTML(self, id_: str, color: str, symbol: str, z_index: Real,
 		additional_classes: List[str], suffix: str) -> str:
@@ -144,7 +145,7 @@ class OffsetMarker(Marker):
 
 	__slots__ = ("at",)
 	_HTML_provider = HtmlProvider("div", ["element", "point"],
-		"logOffsetInfo(self)")
+		"logOffsetInfo(this)")
 
 	def to_HTML(self, id_: str, color: str, symbol: str, z_index: Real,
 		ref: PointMarker, additional_classes: List[str], suffix: str) -> str:
@@ -169,7 +170,7 @@ class GridMarker(Marker):
 
 	__slots__ = ("ul", "grid", "clip")
 	_HTML_provider = HtmlProvider("div", ["element", "area grid"],
-		"logGridInfo(self)")
+		"logGridInfo(this)")
 
 	def to_HTML(self, id_: str, color: str, symbol: str, z_index: Real,
 		additional_classes: List[str], suffix: str) -> str:
@@ -193,7 +194,7 @@ class PatchMarker(Marker):
 
 	__slots__ = ("ul", "size")
 	_HTML_provider = HtmlProvider("div", ["element", "area patch"],
-		"logPatchInfo(self)")
+		"logPatchInfo(this)")
 
 	def to_HTML(self, id_: str, color: str, symbol: str, z_index: Real,
 		additional_classes: List[str], suffix: str) -> str:
@@ -218,7 +219,7 @@ class ClippablePatchMarker(Marker):
 	'''
 	__slots__ = ("ul", "size", "direction")
 	_HTML_provider = HtmlProvider("div", ["element", "area cpatch"],
-		"logClippablePatchInfo(self)")
+		"logClippablePatchInfo(this)")
 
 	def get_clip_direction(self) -> Optional[Tuple[str, bool]]:
 		'''Get the actual clip direction specified by `self.direction`.
@@ -314,7 +315,7 @@ class Element:
 	# provides JSON objects
 	_Java_like_provider: Optional[AssignmentStatementProvider] = None
 	# provides Java-like assignment statements
-	ΔZ: Real = 0.01
+	ΔZ: int = 1
 	# the z-index increment between two juxtaposed HTML elements.]
 
 	def __init__(self, id_: str, context: Optional["GuiAnnotation"]=None,
@@ -731,8 +732,8 @@ class GuiAnnotation:
 		self.ungrouped_elements: Dict[str, Element] = {}
 		self.add_texture(main_texture, "")
 		# the key of main texture is an empty string
-		self.z_index_start = {"point": 30, "patch": 10}
-		self.ΔZ: Real = 0.1
+		self.z_index_start = {"point": 300, "patch": 100}
+		self.ΔZ: Real = 10
 		if isinstance(z_index_start, dict):
 			self.z_index_start.update(z_index_start)
 		# in this setting, when the number of patches is less than 200,
@@ -931,7 +932,7 @@ class GuiAnnotation:
 						continue
 					texture_el_counts[etx] = el_i = \
 						texture_el_counts.get(etx, 0) + 1
-					built[etx].append(("\n" + "\t" * indent).join(el.to_HTML(
+					built[etx].append("\n".join(el.to_HTML(
 						color=next(group_color_series),
 						symbol=next(self.ordinals),
 						z_index=self.ΔZ * el_i,
@@ -949,7 +950,7 @@ class GuiAnnotation:
 					continue
 				texture_el_counts[etx] = el_i = \
 					texture_el_counts.get(etx, 0) + 1
-				built[etx].append(("\n" + "\t" * indent).join(el.to_HTML(
+				built[etx].append("\n".join(el.to_HTML(
 					color=next(group_color_series),
 					symbol=next(self.ordinals),
 					z_index=self.ΔZ * el_i,
@@ -972,7 +973,7 @@ class GuiAnnotation:
 					continue
 				texture_el_counts[etx] = el_i = \
 					texture_el_counts.get(etx, 0) + 1
-				built[etx].append(("\n" + "\t" * indent).join(el.to_HTML(
+				built[etx].append("\n".join(el.to_HTML(
 					color=next(group_color_series),
 					symbol=next(self.ordinals),
 					z_index=self.ΔZ * el_i,
@@ -982,16 +983,26 @@ class GuiAnnotation:
 			raise ValueError("Unsupported value for `coloring`.")
 		# # #
 		all_built_texts: List[str] = []
+		all_built_texts.append(
+			"<script>var allGroupData = {}</script>".format(repr(self.groups)
+				.replace("(", "[").replace(")", "]").replace("'", '"'))
+		) # add a group list
 		for tn, segs in built.items():
-			texture_built_text = "<div class=\"tex--{} texwrap\">\n".format(
-				tn)
-			texture_built_text += "<img src=\"{}\"/>".format(
+			texture_built_text = ("<div class=\"tex--{} texwrap\" "
+				"data='{{\"w\":{},\"h\":{},\"path\":\"{}\"}}'>\n").format(
+					tn, *self.textures[tn].size,
+					self.textures[tn].get_preferred_path())
+			texture_built_text += "<img src=\"{}\">".format(
 				to_data_URL(self.textures[tn].texture_path)
 			)
 			texture_built_text += "\n\n"
 			texture_built_text += "\n\n".join(segs)
 			texture_built_text += "\n</div>"
-			all_built_texts.append(texture_built_text)
+			all_built_texts.append("\n".join("\t" * indent + ln
+				if ln.strip() else ln
+				for ln in texture_built_text.splitlines())
+			)
+		# # #
 		built_text = "\n\n".join(all_built_texts)
 		if file_path:
 			with open(recognize_resource_location(file_path,
@@ -999,3 +1010,43 @@ class GuiAnnotation:
 				file.write(built_text)
 		# will return regardless of whether `file_path` is None
 		return built_text
+
+	def assemble_webpage(self, file_path: Optional[str]=None,
+		embed: bool=True) -> None:
+		'''Assemble a webpage that visualizes the annotation.
+		# # #
+		`embed`: whether style sheets and scripts are embedded into one
+			HTML file.
+		'''
+		HERE = os.path.dirname(__file__)
+		with open(HERE + "/blocks/frame.html",
+			"r", encoding="utf-8") as frame_file:
+			frame = frame_file.read()
+		# these slots should be defined in the HTML frame:
+		# $stylesheet$, $scripts$, $iconsrc$, $elements$
+		if not embed:
+			frame = frame.replace("$stylesheet$",
+				'<link rel="stylesheet" type="text/css" '
+				'href="./sources/magcotstyle.css">'
+			)
+			frame = frame.replace("$scripts$",
+				'<script type="text/javascript" '
+				'src="./sources/arrangement.js"></script>\n\t'
+				'<script type="text/javascript" '
+				'src="./sources/interaction.js"></script>'
+			)
+			frame = frame.replace("$iconsrc$", "./sources/icon.png")
+			frame = frame.replace("$elements$",
+				self.to_HTML_fragment(indent = 4))
+			out_file_name = recognize_resource_location(file_path,
+				ext=".html")
+			destination = os.path.split(out_file_name)[0]
+			# destination to copy the resource files
+			copytree(HERE + "/blocks/sources", destination + "/sources",
+				dirs_exist_ok=True)
+			with open(out_file_name, "w", encoding="utf-8") as file:
+				file.write(frame)
+		else:
+			# embed all the files
+			# kāryakāryatstsaññe
+			...

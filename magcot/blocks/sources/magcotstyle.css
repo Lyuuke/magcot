@@ -1,0 +1,235 @@
+:root {
+	--bg-color: #292a25;
+	--shadow-color: #1c1a16;
+	--shade-6: #3c5b58;
+	--shade-5: #4e7e69;
+	--shade-4: #71a372;
+	--shade-3: #9dd177;
+	--shade-2: #d1f07b;
+	--shade-1: #fcfac7;
+	--sans-set: "Myriad Pro", "Segoe UI", "Noto Sans CJK SC",
+		"Source Han Sans SC", "Lantinghei SC", "PingFang SC",
+		"Microsoft YaHei", sans-serif;
+	--monospace-set: "Noto Mono", "Fira Code", "Consolas",
+		monospace;
+}
+
+body {
+	background-color: var(--bg-color);
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+#main {
+	display: flex;
+	flex-direction: row;
+	margin: 50px;
+}
+
+#controlpanel {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	box-sizing: border-box;
+	width: 200px;
+	padding-top: 32px;
+	margin-right: 20px;
+}
+
+img.icon {
+	width: 196px;
+	height: 196px;
+	image-rendering: pixelated;
+	user-drag: none;
+	-webkit-user-drag: none;
+}
+
+#buttonfield {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 30px 0;
+	width: 100%;
+}
+
+.grouptoggler, .texalt {
+	position: relative;
+	padding: 0.25em;
+	margin: 0.5em;
+	line-height: 1em;
+	font-family: var(--monospace-set);
+	user-select: none;
+	cursor: pointer;
+	box-shadow: 4px 4px 0 0 var(--shadow-color);
+	transition: 0.2s ease;
+}
+
+.grouptoggler:after {
+	box-sizing: border-box;
+	display: inline-block;
+	position: absolute;
+	overflow: hidden;
+	right: -0.75em;
+	top: -0.75em;
+	content: attr(elnumber);
+	height: 1.5em;
+	width: 1.5em;
+	padding: 0.25em;
+	border-radius: 50%;
+	text-align: center;
+	color: var(--shade-2);
+	font-size: 90%;
+	background-color: var(--shade-5);
+	box-shadow: 0 0 0.2em var(--shade-6);;
+}
+
+.grouptoggler.groupon, .texalt.texon {
+	background-color: var(--shade-3);
+	color: var(--bg-color);
+	font-weight: 500;
+	border: 2px solid var(--shade-3);
+}
+
+.grouptoggler.groupoff, .texalt.texoff {
+	background-color: var(--bg-color);
+	color: var(--shade-5);
+	font-weight: 300;
+	border: 2px dotted var(--shade-5);
+}
+
+#displayarea {
+	width: 560px;
+	/* 512 + 48 */
+}
+
+#textureswitch {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+#texnameframe {
+	width: 35ch;
+	padding: 5px;
+	font-family: var(--monospace-set);
+	color: var(--shade-2);
+	font-size: 110%;
+	line-height: 1em;
+	text-align: center;
+	text-shadow: 2px 2px 0 var(--shadow-color);
+}
+
+#display {
+	overflow: hidden;
+	width: 512px;
+	height: 512px;
+	padding: 12px;
+	margin: 12px;
+	box-shadow: 0 0 0 4px var(--shade-3),
+		0 0 0 8px var(--shade-5),
+		0 0 0 12px var(--shade-6),
+		4px 4px 0 12px var(--shadow-color);
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRFHBoW////ju/aXQAAAAJ0Uk5T/wDltzBKAAAAGElEQVR42mJggAJGKGAYIIGBth8KAAIMAEUQAIElnLuQAAAAAElFTkSuQmCC);
+	background-repeat: repeat;
+}
+
+.texwrap {
+	position: relative;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	overflow: visible;
+}
+
+.texwrap > img {
+	position: absolute;
+	image-rendering: pixelated;
+}
+
+.element {
+	position: absolute;
+}
+
+.point {
+	box-sizing: border-box;
+	font-size: 80%;
+	font-weight: 400;
+	color: white;
+	padding: 0.25em;
+	width: 1.7em;
+	height: 1.7em;
+	border-radius: 50%;
+	border: 0.1em solid white;
+	box-shadow: 0 0 0.2em var(--shadow-color);
+	text-align: center;
+	line-height: 1em;
+}
+
+.area {
+	box-sizing: border-box;
+	background-color: transparent;
+	border-width: 2pt;
+	border-style: solid;
+	box-shadow: 0 0 0.2em var(--shadow-color);
+	text-shadow: 0 0 0.1em white;
+	text-align: center;
+	font-size: 80%;
+	font-weight: 400;
+}
+
+#info {
+	box-sizing: border-box;
+	width: 100%;
+	height: 180px;
+	padding: 10px;
+	overflow: auto;
+	color: var(--shade-2);
+	font-family: var(--monospace-set);
+	font-size: 16px;
+	font-variant-ligatures: none;
+	text-shadow: 2px 2px 0 var(--shadow-color);
+	white-space: pre-line;
+	word-wrap: break-word;
+	word-break: break-all;
+}
+
+.canbecopied {
+	cursor: pointer;
+}
+
+div.infocoord, div.infostring {
+	display: inline-block;
+	background-color: var(--shade-6);
+	color: var(--shade-1);
+	text-shadow: none;
+	box-shadow: 2px 2px 0 var(--shadow-color);
+}
+
+div.infocoord:before {
+	content: "(";
+}
+
+div.infocoord:after {
+	content: ")";
+}
+
+div.infostring:before, div.infostring:after {
+	content: '"';
+}
+
+.markername {
+	color: var(--shade-3);
+}
+
+.pyelname {
+	font-weight: 600;
+	color: var(--shade-1);
+}
+
+.pymarkername {
+	font-weight: 300;
+	color: var(--shade-3);
+}
