@@ -85,6 +85,7 @@ img.icon {
 	text-align: center;
 	color: var(--shade-2);
 	font-size: 90%;
+	font-weight: 400;
 	background-color: var(--shade-5);
 	box-shadow: 0 0 0.2em var(--shade-6);;
 }

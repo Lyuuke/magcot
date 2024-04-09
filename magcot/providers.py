@@ -218,10 +218,17 @@ def color_series(series_name: str) -> Generator[str, None, None]:
 		`series_name`.
 	'''
 	def _(H_lim: Tuple[Real, Real], S_lim: Tuple[Real, Real],
-		V_lim: Tuple[Real, Real], close_threshold: Real=1/40):
+		V_lim: Tuple[Real, Real]):
 		HSV_previous: Deque[Tuple[Real, Real, Real]] = deque()
 		fatigue_count = 0
 		# count the times of failure to generate a color
+		diag = hypot(H_lim[1] - H_lim[0],
+			S_lim[1] - S_lim[0],
+			V_lim[1] - V_lim[0])
+		close_threshold = diag / 4
+		# the diagonal length of the subspace of HSV
+		# use to calculate the threshold to check whether two colors
+		# are close or not
 		while True:
 			rand_H = uniform(*H_lim) % 1.
 			rand_S = uniform(*S_lim)
@@ -247,23 +254,23 @@ def color_series(series_name: str) -> Generator[str, None, None]:
 				fatigue_count = 0
 				if len(HSV_previous) > 5:
 					# ensure the length is no more than 5
-					HSV_previous.pop_left()
+					HSV_previous.popleft()
 				hold = map(lambda x: round(x * 255),
 					hsv_to_rgb(rand_H, rand_S, rand_V))
 				yield "rgb({},{},{})".format(*hold)
 
 	_series_data = {
-		"crimson": [(5/6, 1), (0.6, 1), (0.5, 1), 1/30],
-		"red": [(-1/12, 1/12), (0.6, 0.95), (0.3, 0.95), 1/20],
-		"orange": [(1/20, 1/9), (0.4, 0.95), (0.7, 1), 1/25],
-		"earthy": [(1/20, 1/9), (0.3, 0.65), (0.2, 0.65), 1/20],
-		"yellow": [(1/9, 1/6), (0.4, 0.95), (0.7, 0.975), 1/20],
-		"green": [(1/6, 5/12), (0.4, 0.95), (0.3, 0.95), 1/15],
-		"cyan": [(5/12, 13/24), (0.4, 0.95), (0.3, 1), 1/25],
-		"blue": [(13/24, 2/3), (0.4, 0.95), (0.3, 0.95), 1/20],
-		"indigo": [(2/3, 17/24), (0.3, 0.8), (0.2, 0.65), 1/25],
-		"purple": [(3/4, 5/6), (0.4, 0.95), (0.3, 0.95), 1/20],
-		"dim": [(0, 1), (0, 0.25), (0.1, 0.9), 1/15],
+		"crimson": [(5/6, 1), (0.6, 1), (0.5, 1)],
+		"red": [(-1/12, 1/12), (0.6, 0.95), (0.3, 0.95)],
+		"orange": [(1/20, 1/9), (0.4, 0.95), (0.7, 1)],
+		"earthy": [(1/20, 1/9), (0.3, 0.65), (0.2, 0.65)],
+		"yellow": [(1/9, 1/6), (0.4, 0.95), (0.7, 0.975)],
+		"green": [(1/6, 5/12), (0.4, 0.95), (0.3, 0.95)],
+		"cyan": [(5/12, 13/24), (0.4, 0.95), (0.3, 1)],
+		"blue": [(13/24, 2/3), (0.4, 0.95), (0.3, 0.95)],
+		"indigo": [(2/3, 17/24), (0.3, 0.8), (0.2, 0.65)],
+		"purple": [(3/4, 5/6), (0.4, 0.95), (0.3, 0.95)],
+		"dim": [(0, 1), (0, 0.25), (0.1, 0.9)],
 		"any": [(-1/3, 3/12), (0.25, 0.95), (0.3, 0.95)]
 	}
 
