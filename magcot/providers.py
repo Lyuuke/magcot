@@ -11,6 +11,7 @@ from colorsys import hsv_to_rgb
 from functools import cached_property, singledispatchmethod
 from itertools import cycle
 from math import hypot
+from mimetypes import types_map as mime_types_map
 from numbers import Real
 import os
 from random import choice, uniform
@@ -64,7 +65,6 @@ def recognize_resource_location(path: str, ext: str,
 	else:
 		full_path = "/".join((ns_dir, ns, rest_path)).replace("\\", "/")
 	return full_path
-
 
 
 
@@ -149,12 +149,17 @@ class Texture:
 
 
 
-def to_data_URL(path: str, mime: str="image/png") -> str:
+def to_data_URL(path: str, file_type: str=".png") -> str:
 	'''Read and convert a file into base64 data URL (a.k.a. data URI).
 	# # #
 	`path`: the path string of the file.
-	`mime`: the MIME type of the file, by default "img/png".
+	`file_type`: the file type (name extension with or without the dot).
+		by default "png".
 	'''
+	file_type = file_type.strip().lower()
+	if not file_type.startswith("."):
+		file_type = "." + file_type
+	mime = mime_types_map[file_type]
 	with open(path, "rb") as file:
 		data = file.read()
 	return (f"data:{mime};base64,"
@@ -175,7 +180,7 @@ def handle_direction_string(
 
 
 def validated_id(id_: str) -> str:
-	'''To check whether an ID is valid (matches [0-9a-zA-Z_] only).
+	'''To check whether an ID is valid (matches [0-9a-zA-Z_]* only).
 		If not, error is raised.
 	'''
 	if not isinstance(id_, str):
@@ -261,7 +266,7 @@ def color_series(series_name: str) -> Generator[str, None, None]:
 
 	_series_data = {
 		"crimson": [(5/6, 1), (0.6, 1), (0.5, 1)],
-		"red": [(-1/12, 1/12), (0.6, 0.95), (0.3, 0.95)],
+		"red": [(-1/12, 1/20), (0.6, 0.95), (0.3, 0.95)],
 		"orange": [(1/20, 1/9), (0.4, 0.95), (0.7, 1)],
 		"earthy": [(1/20, 1/9), (0.3, 0.65), (0.2, 0.65)],
 		"yellow": [(1/9, 1/6), (0.4, 0.95), (0.7, 0.975)],
