@@ -106,11 +106,16 @@ function addGroupButtons() {
 
 function addListener(el) {
 	el.addEventListener("click", () => {
+		if (el.clickCooldown) {
+			return
+		}
+		el.clickCooldown = true
 		navigator.clipboard.writeText(el.innerText).then(() => {
 			let originalText = el.innerHTML
 			el.innerHTML = "<i>Copied.</i>"
 			setTimeout(() => {
 				el.innerHTML = originalText
+				el.clickCooldown = false
 			}, 250)
 		})
 	})
