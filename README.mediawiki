@@ -1,3 +1,14 @@
 == Intro ==
 '''MAGCOT''' (homophonous with ''maggot'', short for '''Minecraft Auxiliary GUI Component Orientation Tool''') is a Python-based tool used to annotate, describe, and visualize the layouts of Minecraft GUIs, typically in modding.
+
 MAGCOT is dedicated to the last part of the GUI design workflow at artists’ side, where artists must transcribe the coordinates and sizes of all the GUI elements, and hand over these data to programmers.
+
+== Glossary ==
+Here defines the terms used to introduce the functions of MAGCOT below and in the wiki ''(WIP)''. Note that these terms may bear slightly different meanings under developers’ contexts.
+
+* '''GUI elements''' are any marked regions in a GUI that are not purely decorative. This typically includes slots, widgets (buttons, scrollbars, etc.), progress bars, indicators, and other parts whose appearance or states may change during use.
+* '''Textures''' are images in PNG format. A single GUI may use one or more textures.
+* '''Atlantes''' (''sg.'' atlas) are icons all of the same size arranged in a regular grid, usually put next to the margin of the GUI body in one texture, or in a standalone texture. An atlas is commonly used to enumerate all possible visual versions of an element, such as the states of a button (normal, pressed, active, invalid, etc.).
+
+== Examples ==
+''(WIP)''
