@@ -1,0 +1,10 @@
+{
+	"info.hint": "点击元素以显示其信息。",
+	"info.copied": "已复制",
+	"element.size": "尺寸",
+	"element.position": "位置",
+	"element.upperleftcorner": "左上角",
+	"element.direction": "方向",
+	"element.clipsize": "切片尺寸",
+	"element.gridsize": "沿两轴的切片数"
+}

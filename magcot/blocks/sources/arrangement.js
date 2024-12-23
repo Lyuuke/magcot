@@ -112,7 +112,7 @@ function addListener(el) {
 		el.clickCooldown = true
 		navigator.clipboard.writeText(el.innerText).then(() => {
 			let originalText = el.innerHTML
-			el.innerHTML = "<i>Copied.</i>"
+			el.innerHTML = `<i>${langEntries["info.copied"]}</i>`
 			setTimeout(() => {
 				el.innerHTML = originalText
 				el.clickCooldown = false
@@ -141,6 +141,7 @@ document.addEventListener(
 		displayArea = document.getElementById("displayarea")
 		displayWindow = document.getElementById("display")
 		infoWindow = document.getElementById("info")
+		infoWindow.innerText = langEntries["info.hint"]
 		buttonField = document.getElementById("buttonfield")
 		allTextures = document.getElementsByClassName("texwrap")
 		allElements = document.getElementsByClassName("element")

@@ -43,7 +43,7 @@ def is_resource_location_like(path: str) -> bool:
 
 
 def recognize_resource_location(path: str, ext: str,
-	infix: Optional[str]=None) -> str:
+	infix: Optional[str] = None) -> str:
 	'''Check whether `path` is a resource location. If yes, expand it to
 		full path; otherwise return itself unaltered.
 	# # #
@@ -149,7 +149,7 @@ class Texture:
 
 
 
-def to_data_URL(path: str, file_type: str=".png") -> str:
+def to_data_URL(path: str, file_type: str = ".png") -> str:
 	'''Read and convert a file into base64 data URL (a.k.a. data URI).
 	# # #
 	`path`: the path string of the file.
@@ -370,9 +370,9 @@ class AssignmentStatementProvider:
 	'''
 
 	def __init__(self, class_name: str,
-		prefixes: Optional[Iterable[str]]=("private", "static", "final"),
+		prefixes: Optional[Iterable[str]] = ("private", "static", "final"),
 		type_signature: Union[Literal["before", "after", "::after"],
-			None]="before",
+			None] = "before",
 		sign: str="=",
 		new: bool=True,
 		semicolon: bool=True,
@@ -429,8 +429,8 @@ class HtmlProvider:
 	'''
 
 	def __init__(self, tag: str,
-		classes: Optional[List[str]]=None,
-		onclick: Optional[str]=None
+		classes: Optional[List[str]] = None,
+		onclick: Optional[str] = None
 	) -> None:
 		stream: List[str] = [str(tag)]
 		stream.append("id=\"{}\"") # slot 1
@@ -450,8 +450,8 @@ class HtmlProvider:
 			# 3: this slot is reserved for `content` field
 		)
 
-	def __call__(self, id_: Optional[str]=None, content: Optional[str]=None,
-		additional_classes: List[str]=[],
+	def __call__(self, id_: Optional[str] = None,
+		content: Optional[str] = None, additional_classes: List[str] = [],
 		**data: str) -> str:
 		def to_JSON_lit(obj: Any) -> str:
 			'''A simple converter to turn objects into legal JSON literals.

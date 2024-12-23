@@ -1,0 +1,10 @@
+{
+	"info.hint": "Click an element to display its information.",
+	"info.copied": "Copied.",
+	"element.size": "Size",
+	"element.position": "Position",
+	"element.upperleftcorner": "Upper-Left Corner",
+	"element.direction": "Direction",
+	"element.clipsize": "Clip Size",
+	"element.gridsize": "Grid Size"
+}

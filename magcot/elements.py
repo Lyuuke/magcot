@@ -318,7 +318,7 @@ class Element:
 	ΔZ: int = 1
 	# the z-index increment between two juxtaposed HTML elements.]
 
-	def __init__(self, id_: str, context: Optional["GuiAnnotation"]=None,
+	def __init__(self, id_: str, context: Optional["GuiAnnotation"] = None,
 		**markers: Marker) -> None:
 		'''Initialize.
 		# # #
@@ -405,7 +405,7 @@ class Element:
 		raise NotImplementedError("This must be overridden.")
 
 	def to_HTML(self, color: str, symbol: str, additional_classes: List[str],
-		z_index: Real=10) -> Tuple[str, ...]:
+		z_index: Real = 10) -> Tuple[str, ...]:
 		'''Calls `Marker.to_HTML`.
 		On this level, parameter `id_` is resolved, but `color`, `symbol`,
 			and `z-index` still need to be provided externally.
@@ -446,7 +446,7 @@ class Corner(Element):
 
 	@classmethod
 	def of(cls, id_: str, at: Tuple[int, int],
-		context: Optional["GuiAnnotation"]=None) -> Self:
+		context: Optional["GuiAnnotation"] = None) -> Self:
 		if context is None:
 			context = CurrentContext().get()
 		return cls(id_, context, at=PointMarker(at=at))
@@ -473,7 +473,7 @@ class Rectangle(Element):
 
 	@classmethod
 	def of(cls, id_: str, ul: Tuple[int, int], size: Tuple[int, int],
-		context: Optional["GuiAnnotation"]=None) -> Self:
+		context: Optional["GuiAnnotation"] = None) -> Self:
 		if context is None:
 			context = CurrentContext().get()
 		return cls(id_, context, area=PatchMarker(ul=ul, size=size))
@@ -500,7 +500,7 @@ class ItemSlot(Element):
 	_Java_like_provider = AssignmentStatementProvider("Rect")
 
 	def __init__(self, id_: str,
-		context: Optional["GuiAnnotation"]=None,
+		context: Optional["GuiAnnotation"] = None,
 		**markers: Marker) -> None:
 		super().__init__(id_, context, **markers)
 		self.add_data(
@@ -510,7 +510,7 @@ class ItemSlot(Element):
 
 	@classmethod
 	def of(cls, id_: str, ul: Tuple[int, int],
-		context: Optional["GuiAnnotation"]=None) -> Self:
+		context: Optional["GuiAnnotation"] = None) -> Self:
 		if context is None:
 			context = CurrentContext().get()
 		return cls(id_, context, ul=PointMarker(at=ul))
@@ -539,7 +539,7 @@ class FluidTank(Element):
 	@classmethod
 	def of(cls, id_: str, ul: Tuple[int, int], size: Tuple[int, int],
 		direction: Literal["+x", "-x", "+y", "-y"],
-		context: Optional["GuiAnnotation"]=None) -> Self:
+		context: Optional["GuiAnnotation"] = None) -> Self:
 		if context is None:
 			context = CurrentContext().get()
 		return cls(
@@ -574,15 +574,15 @@ class Crop(Element, Textured):
 	_Java_like_provider = AssignmentStatementProvider("TexturedUV")
 
 	def __init__(self, id_: str,
-		context: Optional["GuiAnnotation"]=None,
-		texture: Union[Texture, str, None]=None, **markers: Marker) -> None:
+		context: Optional["GuiAnnotation"] = None,
+		texture: Union[Texture, str, None] = None, **markers: Marker) -> None:
 		super().__init__(id_, context, **markers)
 		super(Element, self).__init__(texture)
 
 	@classmethod
 	def of(cls, id_: str, ul: Tuple[int, int], size: Tuple[int, int],
-		texture: Union[Texture, str, None]=None,
-		context: Optional["GuiAnnotation"]=None) -> Self:
+		texture: Union[Texture, str, None] = None,
+		context: Optional["GuiAnnotation"] = None) -> Self:
 		if context is None:
 			context = CurrentContext().get()
 		return cls(
@@ -623,8 +623,8 @@ class ProgressBar(Element, Textured):
 	_Java_like_provider = AssignmentStatementProvider("TexturedUV")
 
 	def __init__(self, id_: str,
-		context: Optional["GuiAnnotation"]=None,
-		texture: Union[Texture, str, None]=None, **markers: Marker) -> None:
+		context: Optional["GuiAnnotation"] = None,
+		texture: Union[Texture, str, None] = None, **markers: Marker) -> None:
 		super().__init__(id_, context, **markers)
 		super(Element, self).__init__(texture)
 
@@ -670,15 +670,15 @@ class Atlas(Element, Textured):
 	_Java_like_provider = AssignmentStatementProvider("AtlasUV")
 
 	def __init__(self, id_: str,
-		context: Optional["GuiAnnotation"]=None,
-		texture: Union[Texture, str, None]=None, **markers: Marker) -> None:
+		context: Optional["GuiAnnotation"] = None,
+		texture: Union[Texture, str, None] = None, **markers: Marker) -> None:
 		super().__init__(id_, context, **markers)
 		super(Element, self).__init__(texture)
 
 	@classmethod
 	def of(cls, id_: str, ul: Tuple[int, int], grid: Tuple[int, int],
-		clip: Tuple[int, int], texture: Union[Texture, str, None]=None,
-		context: Optional["GuiAnnotation"]=None) -> Self:
+		clip: Tuple[int, int], texture: Union[Texture, str, None] = None,
+		context: Optional["GuiAnnotation"] = None) -> Self:
 		return cls(
 			id_, context, texture,
 			ul=PointMarker(at=ul),
@@ -717,9 +717,9 @@ class GuiAnnotation:
 	'''
 
 	def __init__(self, main_texture: Union[Texture, str],
-		z_index_start: Optional[Dict[str, Real]]=None,
-		ordinal_style: str="qianziwen",
-		color_series: List[str]=["red", "green", "blue", "yellow",
+		z_index_start: Optional[Dict[str, Real]] = None,
+		ordinal_style: str = "qianziwen",
+		color_series: List[str] = ["red", "green", "blue", "yellow",
 			"purple", "orange", "cyan", "crimson", "earthy",
 			"indigo", "dim"]
 	) -> None:
@@ -819,7 +819,7 @@ class GuiAnnotation:
 		return self.annotate(rhs)
 
 	def serialize(self,
-		file_path: Optional[str]=None) -> Dict[str, Union[Dumpable, dict]]:
+		file_path: Optional[str] = None) -> Dict[str, Union[Dumpable, dict]]:
 		'''Convert GUI annotations to a JSON object (as Python dictionary)
 			with essential information. This does not use `ObjectProvider`
 			as the homonymous method of `Element`.
@@ -836,8 +836,8 @@ class GuiAnnotation:
 		# will return regardless of whether `file_path` is None
 		return built
 
-	def to_Java_fragment(self, file_path: Optional[str]=None,
-		order: Literal["class", "elementorder"]="class") -> str:
+	def to_Java_fragment(self, file_path: Optional[str] = None,
+		order: Literal["class", "elementorder"] = "class") -> str:
 		'''Record essential information of annotations as Java code lines.
 			Note that this method does not produce runnable Java code,
 			the lines should be pasted manually to where they should be.
@@ -896,9 +896,9 @@ class GuiAnnotation:
 		# will return regardless of whether `file_path` is None
 		return built_text
 
-	def to_HTML_fragment(self, file_path: Optional[str]=None,
-		coloring: Literal["groupwise", "order"]="groupwise",
-		indent: int=0) -> str:
+	def to_HTML_fragment(self, file_path: Optional[str] = None,
+		coloring: Literal["groupwise", "order"] = "groupwise",
+		indent: int = 0) -> str:
 		'''Convert GUI annotations to HTML elements.
 		The information is nearly all preserved, but not guaranteed.
 		# # #
@@ -1011,19 +1011,36 @@ class GuiAnnotation:
 		# will return regardless of whether `file_path` is None
 		return built_text
 
-	def assemble_webpage(self, file_path: Optional[str]=None,
-		embed: bool=True) -> None:
+	def assemble_webpage(self, file_path: Optional[str] = None,
+		embed: bool = True, lang: str = "zh_cn") -> None:
 		'''Assemble a webpage that visualizes the annotation.
 		# # #
 		`embed`: whether style sheets and scripts are embedded into one
 			HTML file.
+		`lang`: language in the document.
 		'''
 		HERE = os.path.dirname(__file__)
+		if not os.path.exists(lang_dir := HERE + f"/blocks/lang/{lang}.json"):
+			# look for the language file
+			raise ValueError(f"Language file `{lang}.json` does not exist.")
+		with open(lang_dir, "r", encoding="utf-8") as lang_file:
+			lang_dict = json.load(lang_file)
 		with open(HERE + "/blocks/frame.html",
 			"r", encoding="utf-8") as frame_file:
 			frame = frame_file.read()
 		# these slots should be defined in the HTML frame:
-		# $stylesheet$, $scripts$, $iconsrc$, $elements$
+		# $stylesheet$, $langdict$, $scripts$, $iconsrc$, $elements$
+		frame = frame.replace("$langdict$",
+			'<script type="text/javascript">\n\t\t'
+			'langEntries = {{\n\t\t\t'
+			'{}\n\t\t'
+			'}}\n\t</script>'.format(
+				"\n\t\t\t".join(
+					'"{}": "{}",'.format(k, v)
+					for k, v in lang_dict.items()
+				)
+			)
+		) # $langdict$ is filled by the same way regardless of `embed`
 		if not embed:
 			frame = frame.replace("$stylesheet$",
 				'<link rel="stylesheet" type="text/css" '

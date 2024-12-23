@@ -139,6 +139,7 @@ img.icon {
 		4px 4px 0 12px var(--shadow-color);
 	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRFHBoW////ju/aXQAAAAJ0Uk5T/wDltzBKAAAAGElEQVR42mJggAJGKGAYIIGBth8KAAIMAEUQAIElnLuQAAAAAElFTkSuQmCC);
 	background-repeat: repeat;
+	background-clip: content-box;
 }
 
 .texwrap {

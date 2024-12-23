@@ -113,7 +113,7 @@ function addCopiableListenersInInfo() {
 function logPointInfo(el) {
 	let data = JSON.parse(el.getAttribute("data"))
 	let infoText = processId(el.id, el.innerText)
-	infoText += ("\n<u>位置</u> = "
+	infoText += (`\n<u>${langEntries["element.position"]}</u> = `
 		+ processClickToCopy(`${data.x}, ${data.y}`))
 	infoWindow.innerHTML = infoText
 	addCopiableListenersInInfo()
@@ -123,9 +123,9 @@ function logPointInfo(el) {
 function logPatchInfo(el) {
 	let data = JSON.parse(el.getAttribute("data"))
 	let infoText = processId(el.id, el.innerText)
-	infoText += ("\n<u>左上角</u> = "
+	infoText += (`\n<u>${langEntries["element.upperleftcorner"]}</u> = `
 		+ processClickToCopy(`${data.x}, ${data.y}`))
-	infoText += ("\n<u>尺寸</u> = "
+	infoText += (`\n<u>${langEntries["element.size"]}</u> = `
 		+ processClickToCopy(`${data.w}, ${data.h}`))
 	infoWindow.innerHTML = infoText
 	addCopiableListenersInInfo()
@@ -135,11 +135,11 @@ function logPatchInfo(el) {
 function logClippablePatchInfo(el) {
 	let data = JSON.parse(el.getAttribute("data"))
 	let infoText = processId(el.id, el.innerText)
-	infoText += ("\n<u>左上角</u> = "
+	infoText += (`\n<u>${langEntries["element.upperleftcorner"]}</u> = `
 		+ processClickToCopy(`${data.x}, ${data.y}`))
-	infoText += ("\n<u>尺寸</u> = "
+	infoText += (`\n<u>${langEntries["element.size"]}</u> = `
 		+ processClickToCopy(`${data.w}, ${data.h}`))
-	infoText += ("\n<u>方向</u> = "
+	infoText += (`\n<u>${langEntries["element.direction"]}</u> = `
 		+ processClickToCopy(`${data.direction}`, "string"))
 	infoWindow.innerHTML = infoText
 	addCopiableListenersInInfo()
@@ -149,11 +149,11 @@ function logClippablePatchInfo(el) {
 function logGridInfo(el) {
 	let data = JSON.parse(el.getAttribute("data"))
 	let infoText = processId(el.id, el.innerText)
-	infoText += ("\n<u>左上角</u> = "
+	infoText += (`\n<u>${langEntries["element.upperleftcorner"]}</u> = `
 		+ processClickToCopy(`${data.x}, ${data.y}`))
-	infoText += ("\n<u>切片尺寸</u> = "
+	infoText += (`\n<u>${langEntries["element.clipsize"]}</u> = `
 		+ processClickToCopy(`${data.clip_w}, ${data.clip_h}`))
-	infoText += ("\n<u>沿两轴的切片数</u> = "
+	infoText += (`\n<u>${langEntries["element.gridsize"]}</u> = `
 		+ processClickToCopy(`${data.grid_x}, ${data.grid_y}`))
 	infoWindow.innerHTML = infoText
 	addCopiableListenersInInfo()
