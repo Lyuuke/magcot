@@ -313,7 +313,7 @@ class Element:
 	# all the keys will become attributes
 	_object_provider: Optional[ObjectProvider] = None
 	# provides JSON objects
-	_Java_like_provider: Optional[AssignmentStatementProvider] = None
+	_java_like_provider: Optional[AssignmentStatementProvider] = None
 	# provides Java-like assignment statements
 	ΔZ: int = 1
 	# the z-index increment between two juxtaposed HTML elements.]
@@ -396,7 +396,7 @@ class Element:
 		'''
 		raise NotImplementedError("This must be overridden.")
 
-	def to_Java_like(self) -> NoReturn:
+	def to_java_like(self) -> NoReturn:
 		'''Write lines of assignment statements that looks Java-ish.
 		Must be overridden by subclasses.
 		# # #
@@ -442,7 +442,7 @@ class Corner(Element):
 
 	_user_fields = {"at": PointMarker}
 	_object_provider = ObjectProvider("type", "name", "at", type="corner")
-	_Java_like_provider = AssignmentStatementProvider("Point")
+	_java_like_provider = AssignmentStatementProvider("Point")
 
 	@classmethod
 	def of(cls, id_: str, at: Tuple[int, int],
@@ -456,8 +456,8 @@ class Corner(Element):
 			name=self.id, at=self.at.at
 		)
 
-	def to_Java_like(self) -> Tuple[str, str]:
-		return "Point", self._Java_like_provider(
+	def to_java_like(self) -> Tuple[str, str]:
+		return "Point", self._java_like_provider(
 			camel_case(self.id), *self.at.at
 		)
 
@@ -469,7 +469,7 @@ class Rectangle(Element):
 	_user_fields = {"area": PatchMarker}
 	_object_provider = ObjectProvider("type", "name", "ul", "size",
 		type="rectangle")
-	_Java_like_provider = AssignmentStatementProvider("Rect")
+	_java_like_provider = AssignmentStatementProvider("Rect")
 
 	@classmethod
 	def of(cls, id_: str, ul: Tuple[int, int], size: Tuple[int, int],
@@ -483,8 +483,8 @@ class Rectangle(Element):
 			name=self.id, ul=self.area.ul, size=self.area.size
 		)
 
-	def to_Java_like(self) -> Tuple[str, str]:
-		return "Rect", self._Java_like_provider(
+	def to_java_like(self) -> Tuple[str, str]:
+		return "Rect", self._java_like_provider(
 			camel_case(self.id), *self.area.ul, *self.area.size
 		)
 
@@ -497,7 +497,7 @@ class ItemSlot(Element):
 
 	_user_fields = {"ul": PointMarker}
 	_object_provider = ObjectProvider("type", "name", "ul", type="itemslot")
-	_Java_like_provider = AssignmentStatementProvider("Rect")
+	_java_like_provider = AssignmentStatementProvider("Rect")
 
 	def __init__(self, id_: str,
 		context: Optional["GuiAnnotation"] = None,
@@ -520,8 +520,8 @@ class ItemSlot(Element):
 			name=self.id, ul=self.ul.at
 		)
 
-	def to_Java_like(self) -> Tuple[str, str]:
-		return "Rect", self._Java_like_provider(
+	def to_java_like(self) -> Tuple[str, str]:
+		return "Rect", self._java_like_provider(
 			camel_case(self.id), *self.ul.at, 16, 16
 		)
 
@@ -534,7 +534,7 @@ class FluidTank(Element):
 	_user_fields = {"ul": PointMarker, "area": ClippablePatchMarker}
 	_object_provider = ObjectProvider("type", "name", "ul", "size", "axis",
 		"sign", type="fluidtank")
-	_Java_like_provider = AssignmentStatementProvider("Rect")
+	_java_like_provider = AssignmentStatementProvider("Rect")
 
 	@classmethod
 	def of(cls, id_: str, ul: Tuple[int, int], size: Tuple[int, int],
@@ -557,8 +557,8 @@ class FluidTank(Element):
 			axis=_axis, sign=_sign
 		)
 
-	def to_Java_like(self) -> Tuple[str, str]:
-		return "Rect", self._Java_like_provider(
+	def to_java_like(self) -> Tuple[str, str]:
+		return "Rect", self._java_like_provider(
 			camel_case(self.id), *self.area.ul, *self.area.size
 		)
 
@@ -571,7 +571,7 @@ class Crop(Element, Textured):
 	_user_fields = {"ul": PointMarker, "area": PatchMarker}
 	_object_provider = ObjectProvider("type", "name", "ul", "size", "texture",
 		type="crop")
-	_Java_like_provider = AssignmentStatementProvider("TexturedUV")
+	_java_like_provider = AssignmentStatementProvider("TexturedUV")
 
 	def __init__(self, id_: str,
 		context: Optional["GuiAnnotation"] = None,
@@ -598,8 +598,8 @@ class Crop(Element, Textured):
 				if self.texture is not None else None)
 		)
 
-	def to_Java_like(self) -> Tuple[str, str]:
-		return "TexturedUV", self._Java_like_provider(
+	def to_java_like(self) -> Tuple[str, str]:
+		return "TexturedUV", self._java_like_provider(
 			camel_case(self.id),
 			RawExp("textures.get(\"{}\")".format(
 				self.texture.bound_shortcut)),
@@ -620,7 +620,7 @@ class ProgressBar(Element, Textured):
 	_user_fields = {"ul": PointMarker, "area": ClippablePatchMarker}
 	_object_provider = ObjectProvider("type", "name", "ul", "size", "axis",
 		"sign", "texture", type="progressbar")
-	_Java_like_provider = AssignmentStatementProvider("TexturedUV")
+	_java_like_provider = AssignmentStatementProvider("TexturedUV")
 
 	def __init__(self, id_: str,
 		context: Optional["GuiAnnotation"] = None,
@@ -650,8 +650,8 @@ class ProgressBar(Element, Textured):
 				if self.texture is not None else None)
 		)
 
-	def to_Java_like(self) -> Tuple[str, str]:
-		return "TexturedUV", self._Java_like_provider(
+	def to_java_like(self) -> Tuple[str, str]:
+		return "TexturedUV", self._java_like_provider(
 			camel_case(self.id),
 			RawExp("textures.get(\"{}\")".format(
 				self.texture.bound_shortcut)),
@@ -667,7 +667,7 @@ class Atlas(Element, Textured):
 	_user_fields = {"ul": PointMarker, "grid": GridMarker}
 	_object_provider = ObjectProvider("type", "name", "ul", "grid", "clip",
 		"texture", type="atlas")
-	_Java_like_provider = AssignmentStatementProvider("AtlasUV")
+	_java_like_provider = AssignmentStatementProvider("AtlasUV")
 
 	def __init__(self, id_: str,
 		context: Optional["GuiAnnotation"] = None,
@@ -692,8 +692,8 @@ class Atlas(Element, Textured):
 				if self.texture is not None else None)
 		)
 
-	def to_Java_like(self) -> Tuple[str, str]:
-		return "AtlasUV", self._Java_like_provider(
+	def to_java_like(self) -> Tuple[str, str]:
+		return "AtlasUV", self._java_like_provider(
 			camel_case(self.id),
 			RawExp("textures.get(\"{}\")".format(
 				self.texture.bound_shortcut)),
@@ -818,7 +818,7 @@ class GuiAnnotation:
 		'''
 		return self.annotate(rhs)
 
-	def serialize(self,
+	def to_json(self,
 		file_path: Optional[str] = None) -> Dict[str, Union[Dumpable, dict]]:
 		'''Convert GUI annotations to a JSON object (as Python dictionary)
 			with essential information. This does not use `ObjectProvider`
@@ -836,7 +836,7 @@ class GuiAnnotation:
 		# will return regardless of whether `file_path` is None
 		return built
 
-	def to_Java_fragment(self, file_path: Optional[str] = None,
+	def to_java_fragment(self, file_path: Optional[str] = None,
 		order: Literal["class", "elementorder"] = "class") -> str:
 		'''Record essential information of annotations as Java code lines.
 			Note that this method does not produce runnable Java code,
@@ -865,7 +865,7 @@ class GuiAnnotation:
 				"AtlasUV": []
 			} # temporary storage
 			for el in self.elements.values():
-				cls_name, stat = el.to_Java_like()
+				cls_name, stat = el.to_java_like()
 				if len(stat) > 79:
 					break_p = stat.find("(") + 1
 					if break_p > 1:
@@ -882,7 +882,7 @@ class GuiAnnotation:
 		elif order == "elementorder":
 			# arrange the elements by the order that they were annotated
 			for el in self.elements.values():
-				cls_name, stat = el.to_Java_like()
+				cls_name, stat = el.to_java_like()
 				if len(stat) > 79:
 					break_p = stat.find("(") + 1
 					if break_p > 1:
@@ -896,7 +896,7 @@ class GuiAnnotation:
 		# will return regardless of whether `file_path` is None
 		return built_text
 
-	def to_HTML_fragment(self, file_path: Optional[str] = None,
+	def to_html_fragment(self, file_path: Optional[str] = None,
 		coloring: Literal["groupwise", "order"] = "groupwise",
 		indent: int = 0) -> str:
 		'''Convert GUI annotations to HTML elements.
@@ -1011,7 +1011,7 @@ class GuiAnnotation:
 		# will return regardless of whether `file_path` is None
 		return built_text
 
-	def assemble_webpage(self, file_path: Optional[str] = None,
+	def to_webpage(self, file_path: Optional[str] = None,
 		embed: bool = True, lang: str = "zh_cn") -> None:
 		'''Assemble a webpage that visualizes the annotation.
 		# # #
@@ -1054,7 +1054,7 @@ class GuiAnnotation:
 			)
 			frame = frame.replace("$iconsrc$", "./sources/icon.png")
 			frame = frame.replace("$elements$",
-				self.to_HTML_fragment(indent = 4))
+				self.to_html_fragment(indent = 4))
 			out_file_name = recognize_resource_location(file_path,
 				ext=".html")
 			destination = os.path.split(out_file_name)[0]
@@ -1092,7 +1092,7 @@ class GuiAnnotation:
 			frame = frame.replace("$iconsrc$",
 				to_data_URL(SOURCE_BASE + "icon.png"))
 			frame = frame.replace("$elements$",
-				self.to_HTML_fragment(indent = 4))
+				self.to_html_fragment(indent = 4))
 			with open(recognize_resource_location(file_path,
 				ext=".html"), "w", encoding="utf-8") as file:
 				file.write(frame)
