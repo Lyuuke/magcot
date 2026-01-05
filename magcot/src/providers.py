@@ -23,7 +23,9 @@ from typing import *
 Dumpable = Union[int, float, bool, list, None]
 # types that can be dumped into JSON
 Self = TypeVar("Self")
-# not needed since Python 3.11, but I'm using 3.8
+# not needed since Python 3.11
+NoneType = type(None)
+# equivalent to __import__("type").NoneType since Python 3.10
 hook_ = {"namespaces": {}}
 
 
@@ -380,7 +382,7 @@ class AssignmentStatementProvider:
 			Optional[Callable[[str], str]]]]={
 				str:		('"{}"', None),
 				bool:		("{}", str.lower),
-				type(None):	("null", None)
+				NoneType:	("null", None)
 			}
 	) -> None:
 		if type_signature == "before":
